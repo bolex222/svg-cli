@@ -29,9 +29,11 @@ func createNextMotion(char rune, motions *pathMotions) error {
 	if err != nil {
 		return err
 	}
+
 	*motions = append(*motions, pathMotion{
 		Letter: char,
 	})
+
 	return nil
 }
 
@@ -40,18 +42,23 @@ func incrementCurrentPathPoint(char rune, motions *pathMotions, currentMotionInd
 	if currentMotionIndex < 0 {
 		return errors.New("a letter is expected to begin a path")
 	}
+
 	if currentValuesIndex >= 7 {
 		return fmt.Errorf("too many values for motion %c provided at pos %v", (*motions)[currentMotionIndex].Letter, charIncrement)
 	}
+
 	if decimalIndex > 0 {
 		factor := 1 / math.Pow10(decimalIndex)
 		parsedChar, err := strconv.ParseFloat(string(char), 64)
+
 		if err != nil {
 			return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
 		}
+
 		(*motions)[currentMotionIndex].Values[currentValuesIndex] += parsedChar * factor
 	} else {
 		newVal, err := strconv.ParseFloat(string(char), 64)
+
 		if err != nil {
 			return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
 		}
@@ -72,8 +79,10 @@ func ParseMotions(fullPath string) ([]pathMotion, error) {
 
 	for pos, char := range fullPath {
 		switch {
+
 		case unicode.IsLetter(char):
 			err := createNextMotion(char, &motions)
+
 			if err != nil {
 				return nil, err
 			}
@@ -86,19 +95,19 @@ func ParseMotions(fullPath string) ([]pathMotion, error) {
 		case unicode.IsDigit(char):
 			currentDigitIndex++
 			err := incrementCurrentPathPoint(char, &motions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex)
+
 			if err != nil {
 				return nil, err
 			}
+
 			if decimalIndex > 0 {
 				decimalIndex++
 			}
 
 		case char == 46: // char is period
-			fmt.Printf("char: %c \n", char)
 			decimalIndex++
 
 		case char == 44 || char == 32: // char is space or ,
-			fmt.Printf("char: %c \n", char)
 			if currentDigitIndex > 0 {
 				currentValuesIndex++
 				decimalIndex = 0
@@ -115,5 +124,6 @@ func CheckCharIsValidMotionb(char rune) error {
 	if !slices.Contains(VaslidPathChar, char) {
 		return errors.New(string(char) + " is not a valid path character.")
 	}
+
 	return nil
 }
