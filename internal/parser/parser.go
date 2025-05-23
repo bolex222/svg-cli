@@ -17,27 +17,27 @@ var VaslidPathChar = []rune{
 	rune('A'), rune('a'), rune('Z'), rune('z'),
 }
 
-type pathMotion struct {
+type PathMotion struct {
 	Letter rune
 	Values [7]float64
 }
 
-type pathMotions []pathMotion
+type PathMotions []PathMotion
 
-func createNextMotion(char rune, motions *pathMotions) error {
+func createNextMotion(char rune, motions *PathMotions) error {
 	err := CheckCharIsValidMotionb(char)
 	if err != nil {
 		return err
 	}
 
-	*motions = append(*motions, pathMotion{
+	*motions = append(*motions, PathMotion{
 		Letter: char,
 	})
 
 	return nil
 }
 
-func incrementCurrentPathPoint(char rune, motions *pathMotions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex int) error {
+func incrementCurrentPathPoint(char rune, motions *PathMotions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex int) error {
 
 	if currentMotionIndex < 0 {
 		return errors.New("a letter is expected to begin a path")
@@ -69,8 +69,8 @@ func incrementCurrentPathPoint(char rune, motions *pathMotions, currentMotionInd
 	return nil
 }
 
-func ParseMotions(fullPath string) ([]pathMotion, error) {
-	var motions pathMotions
+func ParseMotions(fullPath string) (PathMotions, error) {
+	var motions PathMotions
 	charIncrement := 0
 	currentMotionIndex := -1
 	decimalIndex := 0
