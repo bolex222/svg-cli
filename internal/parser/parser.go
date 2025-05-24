@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"slices"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
-var VaslidPathChar = []rune{
+var VaslidPathChar = [...]rune{
 	rune('M'), rune('m'), rune('L'), rune('l'),
 	rune('H'), rune('h'), rune('V'), rune('v'),
 	rune('C'), rune('c'), rune('S'), rune('s'),
@@ -19,7 +19,7 @@ var VaslidPathChar = []rune{
 
 type PathMotion struct {
 	Letter rune
-	Values [7]float64
+	Values []float64
 }
 
 type PathMotions []PathMotion
@@ -30,9 +30,7 @@ func createNextMotion(char rune, motions *PathMotions) error {
 		return err
 	}
 
-	*motions = append(*motions, PathMotion{
-		Letter: char,
-	})
+	*motions = append(*motions, PathMotion{char, make([]float64, 0, 7)})
 
 	return nil
 }
@@ -45,6 +43,10 @@ func incrementCurrentPathPoint(char rune, motions *PathMotions, currentMotionInd
 
 	if currentValuesIndex >= 7 {
 		return fmt.Errorf("too many values for motion %c provided at pos %v", (*motions)[currentMotionIndex].Letter, charIncrement)
+	}
+
+	if len((*motions)[currentMotionIndex].Values) < currentValuesIndex+1 {
+		(*motions)[currentMotionIndex].Values = append((*motions)[currentMotionIndex].Values, 0)
 	}
 
 	if decimalIndex > 0 {
@@ -120,10 +122,32 @@ func ParseMotions(fullPath string) (PathMotions, error) {
 	return motions, nil
 }
 
+// could be a binary search if array was sorted
 func CheckCharIsValidMotionb(char rune) error {
-	if !slices.Contains(VaslidPathChar, char) {
-		return errors.New(string(char) + " is not a valid path character.")
+
+	for _, a := range VaslidPathChar {
+		if a == char {
+			return nil
+		}
 	}
 
-	return nil
+	return errors.New(string(char) + " is not a valid path character.")
+}
+
+func StringifyMotions(motions *PathMotions) string {
+	var output strings.Builder
+
+	for i, motion := range *motions {
+		output.WriteString(string(motion.Letter))
+		for _, val := range motion.Values {
+			output.WriteString(strconv.FormatFloat(val, 'f', -1, 64))
+			output.WriteString(string(','))
+		}
+
+		if i < len(*motions)-1 {
+			output.WriteString(string(' '))
+		}
+
+	}
+	return output.String()
 }

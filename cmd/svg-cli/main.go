@@ -97,13 +97,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, val := range motions {
-		fmt.Printf("motion: %c, values: %v\n", val.Letter, val.Values)
-	}
+	output := parser.StringifyMotions(&normalizedMotions)
 
-	fmt.Printf("/////////////////////////////////// \n")
+	fmt.Println(output)
 
-	for _, val := range normalizedMotions {
-		fmt.Printf("motion: %c, values: %v\n", val.Letter, val.Values)
-	}
+	// for _, val := range motions {
+	// 	fmt.Printf("motion: %c, values: %v\n", val.Letter, val.Values)
+	// }
+
+	// fmt.Printf("/////////////////////////////////// \n")
+
+	// for _, val := range normalizedMotions {
+	// 	fmt.Printf("motion: %c, values: %v\n", val.Letter, val.Values)
+	// }
 }
