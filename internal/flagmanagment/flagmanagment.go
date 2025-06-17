@@ -1,6 +1,7 @@
 package flagmanagment
 
 import (
+	"errors"
 	"flag"
 )
 
@@ -11,57 +12,68 @@ type Option struct {
 	DefaultValue any
 }
 
-func InitFalgs() (*[]Option, error) {
+func assignFlagValueToOption[T any](flagValues *map[string]*T, destination *map[string]Option, currentFlag *Option) {
+	val, ok := (*flagValues)[currentFlag.Name]
+	if ok {
+		currentFlag.Value = *val
+	} else {
+		currentFlag.Value = currentFlag.DefaultValue
+	}
+	(*destination)[currentFlag.Name] = *currentFlag
+}
 
-	options := []Option{
+func ParseFlags() map[string]Option {
+
+	optionsList := []Option{
+
 		{
 			Name:         "v",
 			Description:  "specify a viewBox in which the path should be normalized",
-			DefaultValue: "0 0 1 1",
+			DefaultValue: "none",
 			Value:        "",
 		},
 		{
-			Name: "b",
-			Description: "a boolean",
+			Name:         "b",
+			Description:  "a boolean",
 			DefaultValue: false,
-			Value: false,
+			Value:        false,
 		},
 	}
 
 	boolValues := make(map[string]*bool)
 	stringValues := make(map[string]*string)
 
-	for i, opt := range options {
-		switch def := options[i].DefaultValue.(type) {
+	for i, opt := range optionsList {
+		switch def := optionsList[i].DefaultValue.(type) {
 		case string:
 			ptr := flag.String(opt.Name, def, opt.Description)
-			stringValues[options[i].Name] = ptr
+			stringValues[optionsList[i].Name] = ptr
 		case bool:
 			ptr := flag.Bool(opt.Name, def, opt.Description)
-			boolValues[options[i].Name] = ptr
+			boolValues[optionsList[i].Name] = ptr
 		}
 	}
 
 	flag.Parse()
 
-	for i, opt := range options {
+	parsedOptions := make(map[string]Option)
+	for i, opt := range optionsList {
 		switch opt.DefaultValue.(type) {
 		case string:
-			val, ok := stringValues[options[i].Name]
-			if ok {
-				options[i].Value = *val
-			} else {
-				options[i].Value = options[i].DefaultValue
-			}
+			assignFlagValueToOption(&stringValues, &parsedOptions, &optionsList[i])
 		case bool:
-			val, ok := boolValues[options[i].Name]
-			if ok {
-				options[i].Value = *val
-			} else {
-				options[i].Value = options[i].DefaultValue
-			}
+			assignFlagValueToOption(&boolValues, &parsedOptions, &optionsList[i])
 		}
 	}
 
-	return &options, nil
+	return parsedOptions
+}
+
+func GetPath() (string, error) {
+	args := flag.Args()
+	if len(args) < 1 {
+		return "", errors.New("error: No path provided.\nusage: svg-cli <path-string>")
+	}
+
+	return args[0], nil
 }

@@ -8,12 +8,18 @@ import (
 )
 
 func main() {
-	options, err := flagmanagment.InitFalgs()
+	options := flagmanagment.ParseFlags()
+	path, err := flagmanagment.GetPath()
+
 	if err != nil {
+		fmt.Printf("%v \n", err)
 		os.Exit(1)
 	}
+	
+	fmt.Printf("path: %v \n", path )
 
-	for _, opt := range *options {
-		fmt.Printf(" opt %v has value %v \n", opt.Name, opt.Value)
+
+	for _, opt := range options {
+		fmt.Printf("opt %v has value %v \n", opt.Name, opt.Value)
 	}
 }
