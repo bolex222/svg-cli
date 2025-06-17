@@ -10,11 +10,11 @@ import (
 )
 
 var VaslidPathChar = [...]rune{
-	rune('M'), rune('m'), rune('L'), rune('l'),
-	rune('H'), rune('h'), rune('V'), rune('v'),
-	rune('C'), rune('c'), rune('S'), rune('s'),
-	rune('Q'), rune('q'), rune('T'), rune('t'),
-	rune('A'), rune('a'), rune('Z'), rune('z'),
+	'M', 'm', 'L', 'l',
+	'H', 'h', 'V', 'v',
+	'C', 'c', 'S', 's',
+	'Q', 'q', 'T', 't',
+	'A', 'a', 'Z', 'z',
 }
 
 type PathMotion struct {
@@ -35,14 +35,20 @@ func createNextMotion(char rune, motions *PathMotions) error {
 	return nil
 }
 
-func incrementCurrentPathPoint(char rune, motions *PathMotions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex int) error {
-
+func incrementCurrentPathPoint(char rune, motions *PathMotions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex int, isNegative bool) error {
 	if currentMotionIndex < 0 {
 		return errors.New("a letter is expected to begin a path")
 	}
-
 	if currentValuesIndex >= 7 {
 		return fmt.Errorf("too many values for motion %c provided at pos %v", (*motions)[currentMotionIndex].Letter, charIncrement)
+	}
+
+	number, err := strconv.ParseFloat(string(char), 64)
+	if err != nil {
+		return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
+	}
+	if isNegative {
+		number *= -1
 	}
 
 	if len((*motions)[currentMotionIndex].Values) < currentValuesIndex+1 {
@@ -51,33 +57,21 @@ func incrementCurrentPathPoint(char rune, motions *PathMotions, currentMotionInd
 
 	if decimalIndex > 0 {
 		factor := 1 / math.Pow10(decimalIndex)
-		parsedChar, err := strconv.ParseFloat(string(char), 64)
-
-		if err != nil {
-			return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
-		}
-
-		(*motions)[currentMotionIndex].Values[currentValuesIndex] += parsedChar * factor
+		(*motions)[currentMotionIndex].Values[currentValuesIndex] += number * factor
 	} else {
-		newVal, err := strconv.ParseFloat(string(char), 64)
-
-		if err != nil {
-			return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
-		}
-
 		(*motions)[currentMotionIndex].Values[currentValuesIndex] *= 10
-		(*motions)[currentMotionIndex].Values[currentValuesIndex] += newVal
+		(*motions)[currentMotionIndex].Values[currentValuesIndex] += number
 	}
 	return nil
 }
 
 func ParseMotions(fullPath string) (PathMotions, error) {
 	var motions PathMotions
-	charIncrement := 0
 	currentMotionIndex := -1
 	decimalIndex := 0
 	currentValuesIndex := 0
-	currentDigitIndex := 0
+	isParsingAdigit := false
+	isNegative := false
 
 	for pos, char := range fullPath {
 		switch {
@@ -91,12 +85,12 @@ func ParseMotions(fullPath string) (PathMotions, error) {
 
 			currentMotionIndex++
 			currentValuesIndex = 0
-			currentDigitIndex = 0
+			isParsingAdigit = false
 			decimalIndex = 0
 
 		case unicode.IsDigit(char):
-			currentDigitIndex++
-			err := incrementCurrentPathPoint(char, &motions, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex)
+			isParsingAdigit = true
+			err := incrementCurrentPathPoint(char, &motions, currentMotionIndex, currentValuesIndex, pos, decimalIndex, isNegative)
 
 			if err != nil {
 				return nil, err
@@ -106,13 +100,18 @@ func ParseMotions(fullPath string) (PathMotions, error) {
 				decimalIndex++
 			}
 
-		case char == 46: // char is period
+		case char == '.': // char is period
 			decimalIndex++
 
-		case char == 44 || char == 32: // char is space or ,
-			if currentDigitIndex > 0 {
+		case char == '-':
+			isNegative = true
+
+		case char == ' ' || char == ',': // char is space or ,
+			decimalIndex = 0
+			isNegative = false
+
+			if isParsingAdigit {
 				currentValuesIndex++
-				decimalIndex = 0
 			}
 
 		default:
