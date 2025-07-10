@@ -1,4 +1,4 @@
-package flagmanagment
+package flagmanagement
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ type Option struct {
 	DefaultValue any
 }
 
-func assignFlagValueToOption[T any](flagValues *map[string]*T, destination *map[string]Option, currentFlag *Option) {
+func setOptionValues[T any](flagValues *map[string]*T, destination *map[string]Option, currentFlag *Option) {
 	val, ok := (*flagValues)[currentFlag.Name]
 	if ok {
 		currentFlag.Value = *val
@@ -60,9 +60,9 @@ func ParseFlags() map[string]Option {
 	for i, opt := range optionsList {
 		switch opt.DefaultValue.(type) {
 		case string:
-			assignFlagValueToOption(&stringValues, &parsedOptions, &optionsList[i])
+			setOptionValues(&stringValues, &parsedOptions, &optionsList[i])
 		case bool:
-			assignFlagValueToOption(&boolValues, &parsedOptions, &optionsList[i])
+			setOptionValues(&boolValues, &parsedOptions, &optionsList[i])
 		}
 	}
 
