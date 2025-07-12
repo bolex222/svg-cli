@@ -116,7 +116,7 @@ func InitMotion(letter rune) (Motion, error) {
 			Letter: letter,
 		}, nil
 	default:
-		return Motion{}, fmt.Errorf("Unexpected Letter %v \n", letter)
+		return Motion{}, fmt.Errorf("unexpected Letter %v", letter)
 	}
 }
 

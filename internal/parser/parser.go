@@ -7,26 +7,7 @@ import (
 	"github.com/bolex222/svg-cli/internal/motion"
 )
 
-var VaslidPathChar = [...]rune{
-	'M', 'm', 'L', 'l',
-	'H', 'h', 'V', 'v',
-	'C', 'c', 'S', 's',
-	'Q', 'q', 'T', 't',
-	'A', 'a', 'Z', 'z',
-}
-
 type Path []motion.Motion
-
-func CheckCharIsValidMotionb(char rune) bool {
-
-	for _, a := range VaslidPathChar {
-		if a == char {
-			return true
-		}
-	}
-
-	return false
-}
 
 type Progress struct {
 	Move        rune
