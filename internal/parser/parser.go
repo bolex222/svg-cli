@@ -1,189 +1,62 @@
 package parser
 
 import (
-	"fmt"
-	"unicode"
+	"errors"
 
-	"github.com/bolex222/svg-cli/internal/motion"
+	"github.com/bolex222/svg-cli/internal/command"
+	"github.com/bolex222/svg-cli/internal/tokenizer"
 )
 
-type Path []motion.Motion
-
-type Progress struct {
-	Move        rune
-	motionIndex int
+type Parser struct {
+	BufferCommand *command.Command
+	Commands      []command.Command
 }
 
-/**
-* parser is a global function using dependency injection to parse based on the right motion
- */
-func ParsePathString(fullPath string) (Path, error) {
-	finalPath := make(Path, 0, 1)
-	progress := Progress{
-		motionIndex: -1,
+func New() *Parser {
+	return &Parser{
+		BufferCommand: nil,
+		Commands:      make([]command.Command, 0),
 	}
+}
 
-	for i, char := range fullPath {
+func (p *Parser) nextCommand(token tokenizer.Token) error {
+	if token.Type == tokenizer.TokenCommand && len(token.Value) > 0 {
+		char := rune(token.Value[0])
+		command, err := command.InitCommandFromChar(char)
+		if err != nil {
+			return err
+		}
+		p.BufferCommand = command
+		return nil
+	} else {
+		return errors.New("invalid token command")
+	}
+}
 
-		switch {
-		case unicode.IsLetter(char):
-			motionBuffer, err := motion.InitMotion(char)
+func (p *Parser) commitCommand() {
+	if p.BufferCommand != nil {
+		p.Commands = append(p.Commands, *p.BufferCommand)
+	}
+}
+
+//func (p *Parser) handleNumberToken(token *tokenizer.Token) {
+//	//TODO: define what happens in command token
+//}
+
+func (p *Parser) ParseTokensToCommands(tokens []tokenizer.Token) ([]command.Command, error) {
+	for _, token := range tokens {
+		switch token.Type {
+		case tokenizer.TokenCommand:
+			p.commitCommand()
+			err := p.nextCommand(token)
 			if err != nil {
-				return finalPath, fmt.Errorf("unexpected character %c at position %v", char, i)
+				return p.Commands, err
 			}
-
-			finalPath = append(finalPath, motionBuffer)
-			progress.motionIndex++
-		case unicode.IsSpace(char):
 		default:
-			return finalPath, fmt.Errorf("unexpected character %c at position %v", char, i)
-
+			continue
+			// return p.Commands, nil
 		}
 	}
-
-	return finalPath, nil
+	p.commitCommand()
+	return p.Commands, nil
 }
-
-// func createNextMotion(char rune, motions *Path) error {
-// 	err := CheckCharIsValidMotionb(char)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	*motions = append(*motions, PathMotion{char, make([]float64, 0, 7)})
-
-// 	return nil
-// }
-
-// func incrementCurrentPathPoint(char rune, motions *Path, currentMotionIndex, currentValuesIndex, charIncrement, decimalIndex int, isNegative bool) error {
-// 	if currentMotionIndex < 0 {
-// 		return errors.New("a letter is expected to begin a path")
-// 	}
-// 	if currentValuesIndex >= cap((*motions)[currentMotionIndex].Values) {
-// 		return fmt.Errorf("too many values for motion %c provided at pos %v", (*motions)[currentMotionIndex].Letter, charIncrement)
-// 	}
-
-// 	number, err := strconv.ParseFloat(string(char), 64)
-// 	if err != nil {
-// 		return fmt.Errorf("character %c at position %v could not be converted to a float2", char, charIncrement)
-// 	}
-// 	if isNegative {
-// 		number *= -1
-// 	}
-
-// 	if len((*motions)[currentMotionIndex].Values) < currentValuesIndex+1 {
-// 		(*motions)[currentMotionIndex].Values = append((*motions)[currentMotionIndex].Values, 0)
-// 	}
-
-// 	if decimalIndex > 0 {
-// 		factor := 1 / math.Pow10(decimalIndex)
-// 		(*motions)[currentMotionIndex].Values[currentValuesIndex] += number * factor
-// 	} else {
-// 		(*motions)[currentMotionIndex].Values[currentValuesIndex] *= 10
-// 		(*motions)[currentMotionIndex].Values[currentValuesIndex] += number
-// 	}
-// 	return nil
-// }
-
-// type parser interface {
-// 	nextChar(char rune)
-// }
-
-// func ParseMotions(fullPath string) (Path, error) {
-
-// 	var currentParser parser
-
-// 	// var motions Path
-// 	// currentMotionIndex := -1
-// 	// currentVectorIndex := -1
-// 	// decimalIndex := 0
-// 	// currentValuesIndex := 0
-// 	// isParsingAdigit := false
-// 	// isNegative := false
-
-// 	for pos, char := range fullPath {
-// 		switch {
-
-// 		case unicode.IsLetter(char):
-// 			motion, err := motion.InitMotion(char)
-
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			motions = append(motions, motion)
-
-// 			currentMotionIndex++
-// 			currentValuesIndex = 0
-// 			isParsingAdigit = false
-// 			decimalIndex = 0
-
-// 		case unicode.IsDigit(char):
-// 			isParsingAdigit = true
-// 			err := incrementCurrentPathPoint(char, &motions, currentMotionIndex, currentValuesIndex, pos, decimalIndex, isNegative)
-
-// 			if err != nil {
-// 				return nil, err
-// 			}
-
-// 			if decimalIndex > 0 {
-// 				decimalIndex++
-// 			}
-
-// 		case char == '.': // char is period
-// 			decimalIndex++
-
-// 		case char == '-':
-// 			isNegative = true
-
-// 		case char == ' ' || char == ',': // char is space or ,
-// 			decimalIndex = 0
-// 			isNegative = false
-
-// 			if isParsingAdigit {
-// 				currentValuesIndex++
-// 			}
-
-// 		default:
-// 			return nil, fmt.Errorf("invalid character %c at position %v", char, pos)
-// 		}
-// 	}
-// 	return motions, nil
-// }
-
-// func splitMotions (path string) []string {
-// 	var	unParsedMotions []string
-// 	motionIndex := -1
-// 	for _, char := range path {
-// 		if (unicode.IsLetter(char)) {
-// 			motionIndex++
-// 			unParsedMotions = append(unParsedMotions, "")
-// 		}
-// 		unParsedMotions[motionIndex] += string(char)
-// 	}
-
-// 	return unParsedMotions
-// }
-
-// func ParseMotions(fullPath string) (Path, error) {
-// 	splitedPath := splitMotions(fullPath)
-// }
-
-// could be a binary search if array was sorted
-
-// func StringifyMotions(motions *Path) string {
-// 	var output strings.Builder
-
-// 	for i, motion := range *motions {
-// 		output.WriteString(string(motion.Letter))
-// 		for _, val := range motion.Values {
-// 			output.WriteString(strconv.FormatFloat(val, 'f', -1, 64))
-// 			output.WriteString(string(','))
-// 		}
-
-// 		if i < len(*motions)-1 {
-// 			output.WriteString(string(' '))
-// 		}
-
-// 	}
-// 	return output.String()
-// }

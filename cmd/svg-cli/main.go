@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/bolex222/svg-cli/internal/flagmanagement"
-	// "github.com/bolex222/svg-cli/internal/parser"
+	"github.com/bolex222/svg-cli/internal/parser"
 	"github.com/bolex222/svg-cli/internal/tokenizer"
 )
 
 func main() {
-	options := flagmanagement.ParseFlags()
+	flagmanagement.ParseFlags()
 	path, err := flagmanagement.GetPath()
 
 	if err != nil {
@@ -22,7 +22,8 @@ func main() {
 
 	reader := bufio.NewReader(strings.NewReader(path))
 
-	tok := tokenizer.New()
+	tok := tokenizer.Tokenizer{}
+
 	tokens, err := tok.Tokenize(reader)
 
 	if err != nil {
@@ -30,19 +31,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	for i, t := range tokens {
-		fmt.Println(t, i)
+	par := parser.New()
+	commands, err := par.ParseTokensToCommands(tokens)
+
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	// TODO: tokenize from ioReader
+	fmt.Printf("amount of command --> %v \n", len(commands))
 
-	// TODO: parse from tokens
-
-	for _, opt := range options {
-		fmt.Printf("opt %v has value %v \n", opt.Name, opt.Value)
+	for i, t := range commands {
+		fmt.Printf("index --> %v : command --> %c \n", i, t.Letter)
 	}
-
-	// for _, motion := range  parsedPath {
-	// 	fmt.Printf("motion %c \n", motion.Letter)
-	// }
 }

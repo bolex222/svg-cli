@@ -1,5 +1,11 @@
 package command
 
+import (
+	"errors"
+
+	"github.com/bolex222/svg-cli/internal/vector"
+)
+
 type CommandChar rune
 
 const (
@@ -24,6 +30,25 @@ const (
 	ClosePath_global                 CommandChar = 'Z'
 	ClosePath_relative               CommandChar = 'z'
 )
+
+type CommandType int
+
+const (
+	NoValueCommand CommandType = iota
+	SingleValueCommand
+	DoubleValueCommand
+	TripleValueCommand
+	SpecialValueCommand
+)
+
+type Command struct {
+	LargeArcFlag bool
+	SweepFlag    bool
+	Type         CommandType
+	Letter       CommandChar
+	Angle        float64
+	Values       []vector.Vector2
+}
 
 func IsCharAValidCommand(char rune) bool {
 	if char == rune(MoveTo_golbal) ||
@@ -51,10 +76,92 @@ func IsCharAValidCommand(char rune) bool {
 	return false
 }
 
-// type Command struct {
-// 	LargeArcFlag bool
-// 	SweepFlag    bool
-// 	Letter       rune
-// 	Angle        float64
-// 	Values       []vector.Vector2
-// }
+func isNoneValue(char rune) bool {
+	commandChar := CommandChar(char)
+	if commandChar == ClosePath_global || commandChar == ClosePath_relative {
+		return true
+	}
+	return false
+}
+
+func isCharSingleValue(char rune) bool {
+	commandChar := CommandChar(char)
+	if commandChar == MoveTo_golbal ||
+		commandChar == MoveTo_relative ||
+		commandChar == LineTo_global ||
+		commandChar == LineTo_relative ||
+		commandChar == VerticalLineTo_global ||
+		commandChar == VerticalLineTo_relative ||
+		commandChar == HorizontalLineTo_global ||
+		commandChar == HorizontalLineTo_relative ||
+		commandChar == SmoothQuadraticBezierTo_global ||
+		commandChar == SmoothQuadraticBezierTo_relative {
+		return true
+	}
+	return false
+}
+
+func isCharDoubleValue(char rune) bool {
+	commandChar := CommandChar(char)
+	if commandChar == SmoothCubicBezierTo_global ||
+		commandChar == SmoothCubicBezierTo_relative ||
+		commandChar == QuadraticBezierTo_global ||
+		commandChar == QuadraticBezierTo_relative {
+		return true
+	}
+	return false
+}
+
+func isCharTripleValue(char rune) bool {
+	commandChar := CommandChar(char)
+	if commandChar == CubicBezierTo_global ||
+		commandChar == CubicBezierTo_relative {
+		return true
+	}
+	return false
+}
+
+func isCharSpecialValue(char rune) bool {
+	commandChar := CommandChar(char)
+	if commandChar == ElipticalArcCurve_global ||
+		commandChar == ElipticalArcCurve_relative {
+		return true
+	}
+	return false
+}
+
+func InitCommandFromChar(char rune) (*Command, error) {
+	switch {
+	case isNoneValue(char):
+		return &Command{
+			Letter: CommandChar(char),
+			Type:   NoValueCommand,
+		}, nil
+	case isCharSingleValue(char):
+		return &Command{
+			Letter: CommandChar(char),
+			Type:   NoValueCommand,
+			Values: make([]vector.Vector2, 0, 1),
+		}, nil
+	case isCharDoubleValue(char):
+		return &Command{
+			Letter: CommandChar(char),
+			Type:   NoValueCommand,
+			Values: make([]vector.Vector2, 0, 2),
+		}, nil
+	case isCharTripleValue(char):
+		return &Command{
+			Letter: CommandChar(char),
+			Type:   NoValueCommand,
+			Values: make([]vector.Vector2, 0, 3),
+		}, nil
+	case isCharSpecialValue(char):
+		return &Command{
+			Letter: CommandChar(char),
+			Type:   NoValueCommand,
+			Values: make([]vector.Vector2, 0, 2),
+		}, nil
+	default:
+		return nil, errors.New("")
+	}
+}
