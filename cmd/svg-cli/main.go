@@ -6,9 +6,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bolex222/svg-cli/internal/command"
 	"github.com/bolex222/svg-cli/internal/flagmanagement"
+	"github.com/bolex222/svg-cli/internal/lexer"
 	"github.com/bolex222/svg-cli/internal/parser"
-	"github.com/bolex222/svg-cli/internal/tokenizer"
 )
 
 func main() {
@@ -21,11 +22,8 @@ func main() {
 	}
 
 	reader := bufio.NewReader(strings.NewReader(path))
-
-	tok := tokenizer.Tokenizer{}
-
-	tokens, err := tok.Tokenize(reader)
-
+	lex := lexer.New()
+	tokens, err := lex.Tokenize(reader)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -40,7 +38,13 @@ func main() {
 
 	fmt.Printf("amount of command --> %v \n", len(commands))
 
-	for i, t := range commands {
-		fmt.Printf("index --> %v : command --> %c \n", i, t.Letter)
+	for _, t := range commands {
+		fmt.Printf("/////////// Command --> %c ///////////// \n", t.Letter)
+		fmt.Printf("values --> %v \n", t.Values)
+		if t.Type == command.ElipticArcValueCommand {
+			fmt.Printf("Angle --> %v \n", t.Angle)
+			fmt.Printf("LargeArcFlag --> %v \n", t.LargeArcFlag)
+			fmt.Printf("SweepFlag --> %v \n", t.SweepFlag)
+		}
 	}
 }

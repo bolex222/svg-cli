@@ -1,4 +1,4 @@
-package tokenizer
+package lexer
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-func (t *Tokenizer) handleDotChar(char rune) error {
+func (t *Lexer) handleDotChar(char rune) error {
 	if !t.isCurrentlyNumberToken() || strings.Contains(t.currentToken.Value, ".") {
 		t.finishCurrentToken()
 		t.nextToken(TokenNumber, string(char))
@@ -18,7 +18,7 @@ func (t *Tokenizer) handleDotChar(char rune) error {
 	return nil
 }
 
-func (t *Tokenizer) handleCharE(char rune) error {
+func (t *Lexer) handleCharE(char rune) error {
 	if !t.isCurrentlyNumberToken() {
 		return errors.New("number token can not start by \"e\"")
 	}
@@ -31,7 +31,7 @@ func (t *Tokenizer) handleCharE(char rune) error {
 	return nil
 }
 
-func (t *Tokenizer) handleMinusChar(char rune) error {
+func (t *Lexer) handleMinusChar(char rune) error {
 	p, err := t.reader.Peek(1)
 	if err != nil {
 		return errors.New("character \"-\" can not be a last char")
@@ -55,7 +55,7 @@ func (t *Tokenizer) handleMinusChar(char rune) error {
 	return nil
 }
 
-func (t *Tokenizer) handleNumberChar(char rune) error {
+func (t *Lexer) handleNumberChar(char rune) error {
 	if !t.isCurrentlyNumberToken() {
 		t.finishCurrentToken()
 		t.nextToken(TokenNumber, string(char))
@@ -65,7 +65,7 @@ func (t *Tokenizer) handleNumberChar(char rune) error {
 	return nil
 }
 
-func (t *Tokenizer) handleLetterChar(char rune) error {
+func (t *Lexer) handleLetterChar(char rune) error {
 	if !command.IsCharAValidCommand(char) {
 		return fmt.Errorf("character %c is not a valid command", char)
 	}

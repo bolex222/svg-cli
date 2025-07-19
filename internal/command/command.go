@@ -34,11 +34,12 @@ const (
 type CommandType int
 
 const (
-	NoValueCommand CommandType = iota
-	SingleValueCommand
-	DoubleValueCommand
-	TripleValueCommand
-	SpecialValueCommand
+	NoValueCommand         CommandType = 0
+	HalfValueCommand       CommandType = 1
+	SingleValueCommand     CommandType = 2
+	DoubleValueCommand     CommandType = 4
+	TripleValueCommand     CommandType = 6
+	ElipticArcValueCommand CommandType = 9
 )
 
 type Command struct {
@@ -76,24 +77,31 @@ func IsCharAValidCommand(char rune) bool {
 	return false
 }
 
-func isNoneValue(char rune) bool {
-	commandChar := CommandChar(char)
+func isCharNoneValue(char CommandChar) bool {
+	commandChar := char
 	if commandChar == ClosePath_global || commandChar == ClosePath_relative {
 		return true
 	}
 	return false
 }
 
-func isCharSingleValue(char rune) bool {
+func isCharHalfValue(char CommandChar) bool {
+	commandChar := char
+	if commandChar == VerticalLineTo_global ||
+		commandChar == VerticalLineTo_relative ||
+		commandChar == HorizontalLineTo_global ||
+		commandChar == HorizontalLineTo_relative {
+		return true
+	}
+	return false
+}
+
+func isCharSingleValue(char CommandChar) bool {
 	commandChar := CommandChar(char)
 	if commandChar == MoveTo_golbal ||
 		commandChar == MoveTo_relative ||
 		commandChar == LineTo_global ||
 		commandChar == LineTo_relative ||
-		commandChar == VerticalLineTo_global ||
-		commandChar == VerticalLineTo_relative ||
-		commandChar == HorizontalLineTo_global ||
-		commandChar == HorizontalLineTo_relative ||
 		commandChar == SmoothQuadraticBezierTo_global ||
 		commandChar == SmoothQuadraticBezierTo_relative {
 		return true
@@ -101,8 +109,8 @@ func isCharSingleValue(char rune) bool {
 	return false
 }
 
-func isCharDoubleValue(char rune) bool {
-	commandChar := CommandChar(char)
+func isCharDoubleValue(char CommandChar) bool {
+	commandChar := char
 	if commandChar == SmoothCubicBezierTo_global ||
 		commandChar == SmoothCubicBezierTo_relative ||
 		commandChar == QuadraticBezierTo_global ||
@@ -112,8 +120,8 @@ func isCharDoubleValue(char rune) bool {
 	return false
 }
 
-func isCharTripleValue(char rune) bool {
-	commandChar := CommandChar(char)
+func isCharTripleValue(char CommandChar) bool {
+	commandChar := char
 	if commandChar == CubicBezierTo_global ||
 		commandChar == CubicBezierTo_relative {
 		return true
@@ -121,8 +129,8 @@ func isCharTripleValue(char rune) bool {
 	return false
 }
 
-func isCharSpecialValue(char rune) bool {
-	commandChar := CommandChar(char)
+func isCharSpecialValue(char CommandChar) bool {
+	commandChar := char
 	if commandChar == ElipticalArcCurve_global ||
 		commandChar == ElipticalArcCurve_relative {
 		return true
@@ -130,38 +138,44 @@ func isCharSpecialValue(char rune) bool {
 	return false
 }
 
-func InitCommandFromChar(char rune) (*Command, error) {
+func InitCommandFromChar(char CommandChar) (*Command, error) {
 	switch {
-	case isNoneValue(char):
+	case isCharNoneValue(char):
 		return &Command{
-			Letter: CommandChar(char),
+			Letter: char,
 			Type:   NoValueCommand,
+		}, nil
+	case isCharHalfValue(char):
+		return &Command{
+			Letter: char,
+			Type:   HalfValueCommand,
+			Values: make([]vector.Vector2, 0, 1),
 		}, nil
 	case isCharSingleValue(char):
 		return &Command{
-			Letter: CommandChar(char),
-			Type:   NoValueCommand,
+			Letter: char,
+			Type:   SingleValueCommand,
 			Values: make([]vector.Vector2, 0, 1),
 		}, nil
 	case isCharDoubleValue(char):
 		return &Command{
-			Letter: CommandChar(char),
-			Type:   NoValueCommand,
+			Letter: char,
+			Type:   DoubleValueCommand,
 			Values: make([]vector.Vector2, 0, 2),
 		}, nil
 	case isCharTripleValue(char):
 		return &Command{
-			Letter: CommandChar(char),
-			Type:   NoValueCommand,
+			Letter: char,
+			Type:   TripleValueCommand,
 			Values: make([]vector.Vector2, 0, 3),
 		}, nil
 	case isCharSpecialValue(char):
 		return &Command{
-			Letter: CommandChar(char),
-			Type:   NoValueCommand,
+			Letter: char,
+			Type:   ElipticArcValueCommand,
 			Values: make([]vector.Vector2, 0, 2),
 		}, nil
 	default:
-		return nil, errors.New("")
+		return nil, errors.New("this command charactere dosn't exist")
 	}
 }

@@ -1,4 +1,4 @@
-package tokenizer
+package lexer
 
 import (
 	"bufio"
@@ -11,8 +11,8 @@ type TokenType int
 const (
 	TokenCommand TokenType = iota
 	TokenNumber
-	TokenEOF
-	TokenError
+	TokenEOF // NOT USED YET
+	TokenError // NOT USED YET
 )
 
 type Token struct {
@@ -20,38 +20,38 @@ type Token struct {
 	Value string
 }
 
-type Tokenizer struct {
+type Lexer struct {
 	reader       *bufio.Reader
 	currentToken *Token
 	tokens       []Token
 }
 
-func New() *Tokenizer {
-	return &Tokenizer{
+func New() *Lexer {
+	return &Lexer{
 		tokens:       make([]Token, 0),
 		currentToken: nil,
 	}
 }
 
-func (t *Tokenizer) nextToken(tokenType TokenType, initialString string) {
+func (t *Lexer) nextToken(tokenType TokenType, initialString string) {
 	t.currentToken = &Token{
 		Type:  tokenType,
 		Value: initialString,
 	}
 }
 
-func (t *Tokenizer) finishCurrentToken() {
+func (t *Lexer) finishCurrentToken() {
 	if t.currentToken != nil {
 		t.tokens = append(t.tokens, *t.currentToken)
 		t.currentToken = nil
 	}
 }
 
-func (t *Tokenizer) isCurrentlyNumberToken() bool {
+func (t *Lexer) isCurrentlyNumberToken() bool {
 	return t.currentToken != nil && t.currentToken.Type == TokenNumber
 }
 
-func (t *Tokenizer) appendToCurrentToken(char rune) error {
+func (t *Lexer) appendToCurrentToken(char rune) error {
 	if t.currentToken == nil {
 		return fmt.Errorf("no token to append to")
 	}
@@ -60,7 +60,7 @@ func (t *Tokenizer) appendToCurrentToken(char rune) error {
 	return nil
 }
 
-func (t *Tokenizer) Tokenize(reader *bufio.Reader) ([]Token, error) {
+func (t *Lexer) Tokenize(reader *bufio.Reader) ([]Token, error) {
 	t.reader = reader
 	i := 0
 
