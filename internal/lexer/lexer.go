@@ -6,12 +6,17 @@ import (
 	"unicode"
 )
 
+// newline char supported by W3C XML specification
+// https://www.w3.org/TR/2008/REC-xml-20081126/#sec-line-ends
+const CARRIAGE_RETURN = 0x0d
+const LINE_FEED = 0x0a
+
 type TokenType int
 
 const (
 	TokenCommand TokenType = iota
 	TokenNumber
-	TokenEOF // NOT USED YET
+	TokenEOF   // NOT USED YET
 	TokenError // NOT USED YET
 )
 
@@ -105,7 +110,7 @@ func (t *Lexer) Tokenize(reader *bufio.Reader) ([]Token, error) {
 				return t.tokens, err
 			}
 
-		case char == ' ' || char == ',':
+		case char == ' ' || char == ',' || char == CARRIAGE_RETURN || char == LINE_FEED:
 			t.finishCurrentToken()
 
 		default:
