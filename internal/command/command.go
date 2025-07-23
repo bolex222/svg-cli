@@ -39,7 +39,7 @@ const (
 	SingleValueCommand     CommandType = 2
 	DoubleValueCommand     CommandType = 4
 	TripleValueCommand     CommandType = 6
-	ElipticArcValueCommand CommandType = 9
+	ElipticArcValueCommand CommandType = 7
 )
 
 type Command struct {
