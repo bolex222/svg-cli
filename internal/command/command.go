@@ -42,6 +42,8 @@ const (
 	ElipticArcValueCommand CommandType = 7
 )
 
+// TODO: Need to update the struct so elptic arc can add radius x and y outside VAlues
+// TODO: plus update the parser
 type Command struct {
 	LargeArcFlag bool
 	SweepFlag    bool

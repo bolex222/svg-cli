@@ -32,9 +32,9 @@ func NewElipticArcParser(char command.CommandChar) (CommandParser, error) {
 }
 
 const (
-	angleTokenIndex int = 2
-	largeArcFlag    int = 3
-	sweepFlag       int = 4
+	xAxisRotation int = 2
+	largeArcFlag  int = 3
+	sweepFlag     int = 4
 )
 
 /*
@@ -48,7 +48,7 @@ func (cp *ElipticArcParser) PushToken(token lexer.Token, parser *Parser) error {
 	currentTokenIndex := cp.currentTokenIndex
 	cp.currentTokenIndex++
 	switch currentTokenIndex {
-	case angleTokenIndex:
+	case xAxisRotation:
 		value, err := strconv.ParseFloat(token.Value, 64)
 		if err != nil {
 			return errors.New("invalid token")
